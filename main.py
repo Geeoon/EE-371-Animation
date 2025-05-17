@@ -1,0 +1,134 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.lines import Line2D
+import mif
+
+def rotate_lines(theta, origin, lines):
+    translated = []
+    for line in lines:
+        start = np.subtract(line[0], origin)
+        end = np.subtract(line[1], origin)
+        translated += ((start, end),)
+    
+    # rotation_matrix = np.array([[1., 0., 0.],  # z
+    #                             [0., np.cos(theta), -np.sin(theta)],
+    #                             [0., np.sin(theta), np.cos(theta)]])
+
+
+    rotation_matrix = np.array([[np.cos(theta), 0., np.sin(theta)],  # y
+                                [0., 1., 0.],
+                                [-np.sin(theta), 0., np.cos(theta)]])
+
+
+    rotated = []
+    for line in translated:
+        start = np.dot(rotation_matrix, line[0])
+        end = np.dot(rotation_matrix, line[1])
+        rotated += ((start, end),)
+    
+    translated = []
+    for line in rotated:
+        start = np.add(line[0], origin)
+        end = np.add(line[1], origin)
+        translated += ((start, end),)
+    
+    return translated
+    
+def project_lines_onto_plane(camera, plane, lines):
+    output = []
+    for line in lines:
+        point_1 = line[0]
+        point_2 = line[1]
+        vector_1 = np.subtract(point_1, camera)
+        vector_2 = np.subtract(point_2, camera)
+
+        denom = np.dot(plane[1], vector_1)
+        if np.isclose(denom, 0):
+            raise Exception("No intersection in point and screen")
+        t = np.dot(plane[1], np.subtract(plane[0], camera)) / denom
+        intersection_1 = np.add(camera, np.multiply(t, vector_1))
+
+        denom = np.dot(plane[1], vector_2)
+        if np.isclose(denom, 0):
+            raise Exception("No intersection in point and screen")
+        t = np.dot(plane[1], np.subtract(plane[0], camera)) / denom
+        intersection_2 = np.add(camera, np.multiply(t, vector_2))
+
+        output += ((intersection_1, intersection_2),)
+    return output
+
+lines = (
+         ((0., 3., 0.), (8., 3., 0.)),
+         ((8., 3., 0.), (8., 9., 0.)),
+         ((8., 9., 0.), (0., 9., 0.)),
+         ((0., 9., 0.), (0., 3., 0.)),  # front panel
+         ((1., 4., 0.), (7., 4., 0.)),
+         ((7., 4., 0.), (7., 8., 0.)),
+         ((7., 8., 0.), (1., 8., 0.)),
+         ((1., 8., 0.), (1., 4., 0.)),  # screen
+         ((3., 3., 3.), (1., 0., 3.)),
+         ((3., 3., 3.), (5., 1., 3.)),  # antennae
+         ((8., 3., 0.), (8., 3., 3.)),
+         ((8., 3., 3.), (8., 9., 3.)),
+         ((8., 9., 3.), (8., 9., 0.)),
+        #  ((8., 9., 0.), (8., 3., 0.)),
+         ((8., 3., 3.), (8., 6., 7.)),
+         ((8., 6., 7.), (8., 9., 7.)),
+         ((8., 9., 7.), (8., 9., 3.)),  # side, x = 8
+         ((0., 3., 0.), (0., 3., 3.)),
+         ((0., 3., 3.), (0., 9., 3.)),
+         ((0., 9., 3.), (0., 9., 0.)),
+         ((0., 3., 3.), (0., 6., 7.)),
+         ((0., 6., 7.), (0., 9., 7.)),
+         ((0., 9., 7.), (0., 9., 3.)),  # size, x = 0
+         ((8., 3., 3.), (0., 3., 3.)),
+         ((8., 6., 7.), (0., 6., 7.)),
+         ((8., 9., 7.), (0., 9., 7.)),  # back
+        )
+center = (4, 6, 3)  # center of TV
+camera = (2., 3., -10.)
+
+plane_norm = np.subtract(center, camera)
+plane_norm /= np.linalg.norm(plane_norm)
+plane_point = camera + plane_norm
+
+plane = (plane_point, plane_norm)
+lines = rotate_lines(np.pi / 4.0, center, lines)
+projections = project_lines_onto_plane(camera, plane, lines)  # just ignore z for points
+final = []
+for line in projections:
+    final += (((.9 * (line[0][0] - 1.), line[0][1] - 2.,), (.9 * (line[1][0] - 1.), line[1][1] - 2.,)),)
+final = np.multiply(250., final)
+
+rounded = []
+for line in final:
+    rounded += (((round(line[0][0]), round(line[0][1])), (round(line[1][0]), round(line[1][1],))),)
+
+final = rounded
+
+fig = plt.figure()
+ax = fig.add_subplot(111)
+for line in final:
+    ax.plot([line[0][0], line[1][0]], [line[0][1], line[1][1]])
+
+# ax = fig.add_subplot(111)
+# for line in projections:
+#     ax.plot([line[0][0], line[1][0]], [line[0][1], line[1][1]])
+
+# ax = fig.add_subplot(111, projection='3d')
+# for line in lines:
+#     ax.plot([line[0][0], line[1][0]], [line[0][1], line[1][1]], zs=[line[0][2], line[1][2]])
+
+# plt.show()
+
+x0s = []
+y0s = []
+x1s = []
+y1s = []
+
+for line in final:
+    x0s += (line[0][0],)
+    y0s += (line[0][1],)
+    x1s += (line[1][0],)
+    y1s += (line[1][1],)
+print(mif.dumps(x0s, width=11))
