@@ -2,15 +2,19 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 
+draw = False
+
 def write_to_mif(name: str, data: list):
     with open(name, 'w') as file:
+        depth = 2 ** int(np.ceil(np.log2(len(data))))
         file.write("WIDTH=11;\n")
-        file.write(f"DEPTH={len(data)};\n\n")
+        file.write(f"DEPTH={depth};\n\n")
         file.write("ADDRESS_RADIX=UNS;\n\n")
         file.write("DATA_RADIX=UNS;\n\n")
-        file.write("CONTENT_BEGIN\n")
+        file.write("CONTENT BEGIN\n")
         for i, val in enumerate(data):
             file.write(f"\t{i}\t:\t{val};\n")
+        file.write(f"\t[{len(data)}..{depth - 1}]\t:\t0;\n")
         file.write("END;")
 
 
@@ -122,11 +126,12 @@ for i, theta in enumerate(np.linspace(0, 2 * np.pi, 60)):
         rounded += (((round(line[0][0]), round(line[0][1])), (round(line[1][0]), round(line[1][1],))),)
     final = rounded
 
-    fig = plt.figure()
-    ax = fig.add_subplot(111)
-    for line in final:
-        ax.plot([line[0][0], line[1][0]], [line[0][1], line[1][1]])
-    # plt.show()
+    if draw:
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        for line in final:
+            ax.plot([line[0][0], line[1][0]], [line[0][1], line[1][1]])
+        plt.show()
 
 
     for line in final:
