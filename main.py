@@ -1,7 +1,18 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
-import mif
+
+def write_to_mif(name: str, data: list):
+    with open(name, 'w') as file:
+        file.write("WIDTH=11;\n")
+        file.write(f"DEPTH={len(data)};\n\n")
+        file.write("ADDRESS_RADIX=UNS;\n\n")
+        file.write("DATA_RADIX=UNS;\n\n")
+        file.write("CONTENT_BEGIN\n")
+        for i, val in enumerate(data):
+            file.write(f"\t{i}\t:\t{val};\n")
+        file.write("END;")
+
 
 def rotate_lines(theta, origin, lines):
     translated = []
@@ -93,23 +104,42 @@ plane_norm /= np.linalg.norm(plane_norm)
 plane_point = camera + plane_norm
 
 plane = (plane_point, plane_norm)
-lines = rotate_lines(np.pi / 4.0, center, lines)
-projections = project_lines_onto_plane(camera, plane, lines)  # just ignore z for points
-final = []
-for line in projections:
-    final += (((.9 * (line[0][0] - 1.), line[0][1] - 2.,), (.9 * (line[1][0] - 1.), line[1][1] - 2.,)),)
-final = np.multiply(250., final)
 
-rounded = []
-for line in final:
-    rounded += (((round(line[0][0]), round(line[0][1])), (round(line[1][0]), round(line[1][1],))),)
+for i, theta in enumerate(np.linspace(0, 2 * np.pi, 60)):
+    rotated = rotate_lines(theta, center, lines)
+    projections = project_lines_onto_plane(camera, plane, rotated)  # just ignore z for points
+    final = []
+    for line in projections:
+        final += (((.9 * (line[0][0] - 1.), line[0][1] - 2.,), (.9 * (line[1][0] - 1.), line[1][1] - 2.,)),)
+    final = np.multiply(250., final)
+    rounded = []
+    for line in final:
+        rounded += (((round(line[0][0]), round(line[0][1])), (round(line[1][0]), round(line[1][1],))),)
+    final = rounded
 
-final = rounded
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    for line in final:
+        ax.plot([line[0][0], line[1][0]], [line[0][1], line[1][1]])
+    plt.show()
 
-fig = plt.figure()
-ax = fig.add_subplot(111)
-for line in final:
-    ax.plot([line[0][0], line[1][0]], [line[0][1], line[1][1]])
+    x0s = []
+    y0s = []
+    x1s = []
+    y1s = []
+
+    for line in final:
+        x0s += (line[0][0],)
+        y0s += (line[0][1],)
+        x1s += (line[1][0],)
+        y1s += (line[1][1],)
+
+
+    write_to_mif(f"./frames/frame_{i}_x0s.mif", x0s)
+    write_to_mif(f"./frames/frame_{i}_x1s.mif", x1s)
+    write_to_mif(f"./frames/frame_{i}_y0s.mif", y0s)
+    write_to_mif(f"./frames/frame_{i}_y1s.mif", x1s)
+
 
 # ax = fig.add_subplot(111)
 # for line in projections:
@@ -118,17 +148,3 @@ for line in final:
 # ax = fig.add_subplot(111, projection='3d')
 # for line in lines:
 #     ax.plot([line[0][0], line[1][0]], [line[0][1], line[1][1]], zs=[line[0][2], line[1][2]])
-
-# plt.show()
-
-x0s = []
-y0s = []
-x1s = []
-y1s = []
-
-for line in final:
-    x0s += (line[0][0],)
-    y0s += (line[0][1],)
-    x1s += (line[1][0],)
-    y1s += (line[1][1],)
-print(mif.dumps(x0s, width=11))
