@@ -1,6 +1,5 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.lines import Line2D
 
 draw = False
 
@@ -145,12 +144,15 @@ for i, theta in enumerate(np.linspace(0, 2 * np.pi, 60)):
 write_to_mif(f"./mifs/x0s.mif", x0s)
 write_to_mif(f"./mifs/x1s.mif", x1s)
 write_to_mif(f"./mifs/y0s.mif", y0s)
-write_to_mif(f"./mifs/y1s.mif", x1s)
+write_to_mif(f"./mifs/y1s.mif", y1s)
 
 # ax = fig.add_subplot(111)
 # for line in projections:
 #     ax.plot([line[0][0], line[1][0]], [line[0][1], line[1][1]])
 
-# ax = fig.add_subplot(111, projection='3d')
-# for line in lines:
-#     ax.plot([line[0][0], line[1][0]], [line[0][1], line[1][1]], zs=[line[0][2], line[1][2]])
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
+for line in lines:
+    ax.plot([line[0][0], line[1][0]], [line[0][1], line[1][1]], zs=[line[0][2], line[1][2]])
+
+plt.show()
