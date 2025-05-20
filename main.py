@@ -118,8 +118,8 @@ for i, theta in enumerate(np.linspace(0, 2 * np.pi, 60)):
     projections = project_lines_onto_plane(camera, plane, rotated)  # just ignore z for points
     final = []
     for line in projections:
-        final += (((.9 * (line[0][0] - 1.), line[0][1] - 2.,), (.9 * (line[1][0] - 1.), line[1][1] - 2.,)),)
-    final = np.multiply(250., final)
+        final += (((.825 * (line[0][0] - 1.1), line[0][1] - 2.6,), (.825 * (line[1][0] - 1.1), line[1][1] - 2.6,)),)
+    final = np.multiply(400., final)
     rounded = []
     for line in final:
         rounded += (((round(line[0][0]), round(line[0][1])), (round(line[1][0]), round(line[1][1],))),)
@@ -128,6 +128,8 @@ for i, theta in enumerate(np.linspace(0, 2 * np.pi, 60)):
     if draw:
         fig = plt.figure()
         ax = fig.add_subplot(111)
+        ax.set_xlim([0, 640])
+        ax.set_ylim([0, 480])
         for line in final:
             ax.plot([line[0][0], line[1][0]], [line[0][1], line[1][1]])
         plt.show()
