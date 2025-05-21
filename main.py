@@ -113,6 +113,9 @@ y0s = []
 x1s = []
 y1s = []
 
+rotated = None
+projections = None
+
 for i, theta in enumerate(np.linspace(0, 2 * np.pi, 60)):
     rotated = rotate_lines(theta, center, lines)
     projections = project_lines_onto_plane(camera, plane, rotated)  # just ignore z for points
@@ -148,13 +151,16 @@ write_to_mif(f"./mifs/x1s.mif", x1s)
 write_to_mif(f"./mifs/y0s.mif", y0s)
 write_to_mif(f"./mifs/y1s.mif", y1s)
 
-# ax = fig.add_subplot(111)
-# for line in projections:
-#     ax.plot([line[0][0], line[1][0]], [line[0][1], line[1][1]])
-
 fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')
-for line in lines:
+ax.set_aspect('equal')
+# print(projections)
+for line in projections:
     ax.plot([line[0][0], line[1][0]], [line[0][1], line[1][1]], zs=[line[0][2], line[1][2]])
+
+for line in rotated:
+    ax.plot([line[0][0], line[1][0]], [line[0][1], line[1][1]], zs=[line[0][2], line[1][2]])
+
+# ax.plot(camera[0], camera[1], camera[2])
 
 plt.show()
